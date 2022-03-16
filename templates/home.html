@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Descuentos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/bootstrap/dist/css/bootstrap.min.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="text-center">
+            <h1>Elige una tienda</h1>
+            <a class="btn btn-outline-primary" href="{{ url_for('productosFalabella') }}">Falabella</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('productosParis') }}">Paris</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('productosRipley') }}">Ripley</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('productosAbcdin') }}">Abcdin</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('productosLapolar') }}">Lapolar</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('productosLider') }}">Lider</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('productosHites') }}">Hites</a>
+        </div>
+    </div>
+</body>
+</html>

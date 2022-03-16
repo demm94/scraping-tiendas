@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lider</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/bootstrap/dist/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.4/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lider</h1>
+        <table id="dt" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Marca</th>
+                    <th>Descuento</th>
+                    <th>Precio</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+    <script src="{{ url_for('static', filename='node_modules/jquery/dist/jquery.min.js') }}"></script>
+    <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
+    <script>
+
+        const currencyOptions = { style: 'currency', currency: 'CLP' };
+        $(document).ready(function() {
+            $('#dt').DataTable( {
+                "ajax": {
+                    method: "GET",
+                    url: "{{ url_for('apiLider') }}",
+                    dataType: "json",
+                },
+                order: [[ 2, "desc" ]],
+                columns: [
+                    {
+                        data: "nombre",
+                        render: (data, type, row) => {
+                            return `<a target="_blank" href="${row.url}">${data}</a>`
+                        }
+                    },
+                    {
+                        data: "marca"
+                    },
+                    {
+                        data: "descuento",
+                        render: {
+                            display: (data) => {
+                                return `${data}%`
+                            },
+                        }
+                    },
+                    {
+                        data: "precio",
+                        render: {
+                            display: (data) => {
+                                return new Intl.NumberFormat('es-CL', currencyOptions).format(data);
+                            },
+                        }
+                    },
+                ]
+            } );
+        });
+    </script>
+</body>
+</html>
