@@ -1,49 +1,29 @@
 from pydoc import describe
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, abort
 import requests, json, re, time
 from bs4 import BeautifulSoup
+import db
+from models.Articulo import Articulo
+from models.Precio import Precio
 
 app = Flask(__name__)
 
-CATEGORIAS_FALABELLA = {
-    #"tv": "cat1012",
-    #"notebooks": "cat70057",
-    #"telefonos": "cat2018",
-    #"computacion": "cat40052",
-    #"computacion-gamer": "cat4850013",
-    #"tecnologia": "cat7090034",
-    #"decoracion-iluminacion": "cat2026",
-    #"cocina": "cat3065",
-    #"electrohogar": "cat16510006",
-    #"hombre": "cat7450065",
-    #"respaldos-veladores": "cat3212",
-    #"sabanas": "cat3215"
-    #"ropa-cama": "cat2073",
-    #"banio": "cat2006",
-    "sillas": "cat9130008",
-}
-
-CATEGORIAS_PARIS = {
-    #"tecnologia": "/tecnologia/",
-    #"electro": "/electro/",
-    #"dormitorio": "/dormitorio/",
-    #"muebles": "/muebles/",
-    #"decoracion": "/decohogar/decoracion/",
-    #"cocina": "/linea-blanca/cocina/",
-    #"ropa-cama": "/dormitorio/ropa-cama/",
-    #"tv": "/electro/television/",
-    #"notebooks": "/tecnologia/computadores/notebooks/",
-    "tecno": "/tecnologia/",
-}
-
 CATEGORIAS_RIPLEY = {
-    #"decoracion": "/decoracion/decoracion-hogar/",
+    "decoracion": "/decoracion/decoracion-hogar/",
     #"notebooks": "/tecno/computacion/notebooks",
     #"celulares": "/tecno/celulares",
     #"tv": "/tecno/television/smart-tv",
     #"cocina": "/electro/cocina",
-    "cortinas": "/decoracion/cortinas",
-    "ropa-cama": "/dormitorio/ropa-de-cama",
+    #"cortinas": "/decoracion/cortinas",
+    #"ropa-cama": "/dormitorio/ropa-de-cama",
+    #"jeans": "/moda-hombre/jeans-y-pantalones",
+    #"chaquetas": "/moda-hombre/tops-y-chaquetas",
+    #"ropa-interior": "/moda-hombre/ropa-interior-y-pijamas",
+    "pesas-entrenamiento": "/deporte-y-aventura/fitness/pesas-y-entrenamiento",
+    #"sabanas": "/dormitorio/ropa-de-cama/sabanas",
+    "polerones": "/moda-hombre/tops-y-chaquetas/polerones",
+    "jeans": "/moda-hombre/jeans-y-pantalones/jeans",
+    #"almohadas": "/dormitorio/ropa-de-cama/almohadas",
 }
 
 CATEGORIAS_ABCDIN = {
@@ -51,7 +31,7 @@ CATEGORIAS_ABCDIN = {
     "ropa-cama": "/dormitorio/ropa-de-cama/toda-ropa-de-cama",
     "respaldo-velador": "/dormitorio/muebles-dormitorio/respaldo-y-velador",
     "ofertas": "/ofertas",
-    "tv-video": "/electro/tv-y-video"
+    "tv-video": "/electro/tv-y-video",
 }
 
 CATEGORIAS_LAPOLAR = {
@@ -62,173 +42,136 @@ CATEGORIAS_LAPOLAR = {
     #"decohogar": "/decohogar/",
     #"deportes": "/deportes/",
     #"hombre": "/hombre/",
-    "computacion": "/tecnologia/computadores/"
+    #"computacion": "/tecnologia/computadores/"
+    "cortinas": "/decohogar/decoracion/cortinas/",
 }
 
 CATEGORIAS_LIDER = {
-    "tecno": "Tecno",
-    "celulares": "Celulares",
-    "electro": "Electrohogar",
-    "ferreteria": "Ferretería",
-    "deportes": "Deportes",
+    #"tecno": "Tecno",
+    #"celulares": "Celulares",
+    #"electro": "Electrohogar",
+    #"ferreteria": "Ferretería",
+    #deportes": "Deportes",
+    #"liquidacion": "Destacados Mundo Lider/Liquidación",
+    "cortinas": "Decohogar/Decoración/Cortinas",
 }
 
 CATEGORIAS_HITES = {
     "tecnologia": "/tecnologia/",
+    "electro": "/electro-hogar/",
     "dormitorio": "/dormitorio/",
     "liquidacion": "/liquidacion/",
     "muebles": "/muebles/",
     "hogar": "/hogar/",
+    "herramientas": "/herramientas/"
 }
 
 @app.route('/')
 def index():
     return render_template('home.html')
 
-@app.route('/falabella')
-def falabella():
-    products = []
-    for key, categoria in CATEGORIAS_FALABELLA.items():
-        print(f'Procesando categoria {key}')
-        API_FALABELLA = 'https://www.falabella.com/s/browse/v1/listing/cl?page={}&categoryId={}&zones=ZL_CERRILLOS,LOSC,130617,RM,RM,13'.format("1", categoria)
-        r = requests.get(API_FALABELLA)
-        data = r.json()['data'] if r.status_code == 200 else None
-        if data:
-            pagination = data['pagination']
-            print(pagination)
-            totalPages = int((pagination['count']/pagination['perPage']) + 1)
-            for page in range(1, totalPages + 1):
-                print(f'Procesando página {page} de {totalPages + 1}')
-                API_FALABELLA = 'https://www.falabella.com/s/browse/v1/listing/cl?page={}&categoryId={}&zones=ZL_CERRILLOS,LOSC,130617,RM,RM,13'.format(page, categoria)
-                r = requests.get(API_FALABELLA)
-                if r.status_code == 409:
-                    break
-                data = r.json()['data'] if r.status_code == 200 else None
-                print(r.status_code)
-                if data:
-                    for item in data['results']:
-                        # Descuento
-                        if 'discountBadge' in item and '%' in item['discountBadge']['label']:
-                            descuento = int(item['discountBadge']['label'].replace("%", "").replace("-", ""))
-                        else:
-                            descuento = 0
-                        product = {
-                            "nombre": item['displayName'],
-                            "marca": item['brand'] if "brand" in item else "Missing",
-                            "precio": int(item['prices'][0]['price'][0].replace('.', '')),
-                            "url": item['url'],
-                            "descuento": descuento,
-                        }
-                        products.append(product)
-                time.sleep(4)
-                if page%150 == 0:
-                    time.sleep(30)
-
-    products = sorted(products, key=lambda p: int(p["descuento"]), reverse=True)
-
-    with open("falabella_productos.json", "w") as f:
-            f.write('{"data": ' + json.dumps(products) + "}")
-            f.close()
-    print(pagination)
-    print(totalPages)
-    return "<h1>Success!</h1>"
-
 @app.route('/falabella/productos')
 def productosFalabella():
-    jf = open("falabella_productos.json")
-    data = json.load(jf)['data']
-    return render_template('falabella.html', products=data)
+    return render_template('falabella.html')
+
+@app.route('/falabella/producto/<int:id>')
+def productoFalabella(id):
+    try:
+        producto = db.session.query(Articulo).get(id)
+        if producto:
+            return render_template('detalle_producto_falabella.html', producto=producto)
+        else:
+            return abort(404)
+    except Exception as e:
+        print("Error al obtener precios", e)
+        return abort(500)
+    finally:
+        db.session.close()
 
 @app.route('/api/falabella')
 def apiFalabella():
-    jf = open("falabella_productos.json")
-    data = json.load(jf)['data']
+    res = db.session.query(Articulo).filter(Articulo.tienda == "Falabella").all()
+    productos = [{
+        "id": a.id,
+        "nombre": a.nombre,
+        "marca": a.marca,
+        "precio": a.last_precio,
+        "mejor_precio": a.best_precio,
+        "descuento": a.descuento,
+        "url": a.url
+    } for a in res]
+    db.session.close()
+
     return jsonify(
         {
-            "data": data,
-            "recordsTotal": len(data),
-            "recordsFiltered": len(data),
+            "data": productos,
+            "recordsTotal": len(productos),
+            "recordsFiltered": len(productos),
             "draw": 1,
         }
     )
 
-@app.route('/paris')
-def paris():
-    for key, categoria in CATEGORIAS_PARIS.items():
-        BASE_PARIS = "https://www.paris.cl" + categoria
-        start = 0
-        size = 40
-        r = requests.get(BASE_PARIS)
-        soup = BeautifulSoup(r.text, 'lxml')
-        results = soup.find("div", {"class": "search-result-content"})
-        totalProducts = re.sub(r'([^0-9])\w+', '', results.text.replace(',', '').strip()) # Total de productos
-        totalPages = int(int(totalProducts)/size + 1)
-        print(f'Total de productos: {totalProducts}')
-        products = []
-        for page in range(0, totalPages):
-            print(f'Procesando página {page + 1} de {totalPages}')
-            URL_PARIS = BASE_PARIS + '?start={}&sz={}'.format(start, size)
-            r = requests.get(URL_PARIS)
-            print(r.status_code)
-            if r.status_code == 200:
-                soup = BeautifulSoup(r.text, 'lxml')
-                ul = soup.find("ul", {"id": "search-result-items"})
-                lis = ul.find_all("li", recursive=False) # Primer nivel
-                for li in lis:
-                    nombre = li.find("span", {"class": "ellipsis_text"})
-                    marca = li.find("p", {"class": "brand-product-plp"})
-                    precio = li.find("div", {"class": "price__text"})
-                    descuento = li.find("div", {"class": "price__badge"})
-                    url = li.find("a", {"class": "thumb-link js-product-layer"})
+@app.route('/api/falabella/producto/<int:id>')
+def apiProductoFalabella(id):
+    res = db.session.query(Precio).filter(id == Precio.articulo_id).all()
+    precios = [{
+        "precio": p.valor,
+        "date": p.create_date
+    } for p in res]
+    db.session.close()
 
-                    #Validaciones
-                    if precio:
-                        precio_procesado = precio.text.replace('$','').replace('.','').strip()
-                        if precio_procesado.isdigit():
-                            precio_procesado = int(precio_procesado)
-                        else:
-                            precio_procesado = 0
-
-                    if url:
-                        if "https" in url['href']:
-                            url = url['href']
-                        else:
-                            url = f'https://www.paris.cl{url["href"]}'
-
-                    product = {
-                        "nombre": nombre.text.strip() if nombre else 'Missing',
-                        "marca": marca.text.strip() if marca else 'Missing',
-                        "precio": precio_procesado,
-                        "descuento": int(descuento.text.strip().replace("%", "")) if descuento else 0,
-                        "url": url
-                    }
-                    products.append(product)
-            start+=size
-            time.sleep(1)
-
-    products = sorted(products, key=lambda p: int(p["descuento"]), reverse=True)
-
-    with open("paris_productos.json", "w") as f:
-            f.write('{"data": ' + json.dumps(products) + "}")
-            f.close()
-    return "<h1>Success!</h1>"
+    return jsonify(
+        {
+            "data": precios,
+        }
+    )
 
 @app.route('/paris/productos')
 def productosParis():
-    jf = open("paris_productos.json")
-    data = json.load(jf)['data']
-    return render_template('paris.html', products=data)
+    return render_template('paris.html')
+
+@app.route('/paris/producto/<id>')
+def productoParis(id):
+    producto = db.session.query(Articulo).get(id)
+    print(producto)
+    if producto:
+        return render_template('detalle_producto_paris.html', producto=producto)
 
 @app.route('/api/paris')
 def apiParis():
-    jf = open("paris_productos.json")
-    data = json.load(jf)['data']
+    res = db.session.query(Articulo).filter(Articulo.tienda == "Paris").all()
+    productos = [{
+        "id": a.id,
+        "nombre": a.nombre,
+        "marca": a.marca,
+        "precio": a.last_precio,
+        "mejor_precio": a.best_precio,
+        "descuento": a.descuento,
+        "url": a.url
+    } for a in res]
+    db.session.close()
+
     return jsonify(
         {
-            "data": data,
-            "recordsTotal": len(data),
-            "recordsFiltered": len(data),
+            "data": productos,
+            "recordsTotal": len(productos),
+            "recordsFiltered": len(productos),
             "draw": 1,
+        }
+    )
+
+@app.route('/api/paris/producto/<id>')
+def apiProductoParis(id):
+    res = db.session.query(Precio).filter(id == Precio.articulo_id).all()
+    precios = [{
+        "precio": p.valor,
+        "date": p.create_date
+    } for p in res]
+    db.session.close()
+
+    return jsonify(
+        {
+            "data": precios,
         }
     )
 
@@ -257,13 +200,22 @@ def ripley():
                 for div in divs:
                     nombre = div.find("div", {"class": "catalog-product-details__name"})
                     marca = div.find("div", {"class": "brand-logo"})
-                    precio = div.find("li", {"class": "catalog-prices__offer-price"})
+                    precios = div.find("ul", {"class": "catalog-prices__list"})
                     descuento = div.find("div", {"class": "catalog-product-details__discount-tag"})
                     url = div.find("a", {"class": "catalog-product-item"})
+
+                    #Validaciones
+                    if precios:
+                        precios = precios.find_all("li")
+                        precio = precios[-1]
+                        precio = int(precio.text.strip().replace('$','').replace('.',''))
+                    else:
+                        precio = 0
+
                     product = {
                         "nombre": nombre.text.strip() if nombre else 'Missing',
                         "marca": marca.text.strip() if marca else 'Missing',
-                        "precio": int(precio.text.strip().replace('$','').replace('.','')) if precio else 0,
+                        "precio": precio,
                         "descuento": int(descuento.text.strip().replace("%", "").replace("-", "")) if descuento else 0,
                         "url": f'https://simple.ripley.cl{url["href"]}'
                     }
