@@ -18,10 +18,13 @@
                     <th>Marca</th>
                     <th>Descuento</th>
                     <th>Precio</th>
+                    <th>Mejor precio</th>
+                    <th>Historial</th>
                 </tr>
             </thead>
         </table>
     </div>
+    <script src="{{ url_for('static', filename='node_modules/bootstrap/dist/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/jquery/dist/jquery.min.js') }}"></script>
     <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
     <script>
@@ -31,7 +34,7 @@
             $('#dt').DataTable( {
                 "ajax": {
                     method: "GET",
-                    url: "{{ url_for('apiLider') }}",
+                    url: "{{ url_for('lider_bp.apiLider') }}",
                     dataType: "json",
                 },
                 order: [[ 2, "desc" ]],
@@ -56,9 +59,32 @@
                     {
                         data: "precio",
                         render: {
+                            display: (data, type, row) => {
+                                let type_badge = 'secondary';
+                                if (data > row.mejor_precio) {
+                                    type_badge = 'danger';
+                                }
+                                const label = `<span class="badge bg-${type_badge}">${parseInt(row.mejor_precio/data) - 1}%</span>`
+                                const currentPriceFormat = new Intl.NumberFormat('es-CL', currencyOptions).format(data);
+                                return `${currentPriceFormat} ${label}`;
+                            },
+                        }
+                    },
+                    {
+                        data: "mejor_precio",
+                        render: {
                             display: (data) => {
                                 return new Intl.NumberFormat('es-CL', currencyOptions).format(data);
                             },
+                        }
+                    },
+                    {
+                        data: "id",
+                        render: {
+                            display: (data) => {
+                                
+                                return `<a target="_blank" href="/lider/producto/${data}">Ver gráfico</a>`
+                            }
                         }
                     },
                 ]

@@ -1,4 +1,4 @@
-import requests, json, re
+import requests, re
 import time
 import db
 from bs4 import BeautifulSoup
@@ -6,23 +6,23 @@ from models.Articulo import Articulo
 from models.Precio import Precio
 
 CATEGORIAS_PARIS = {
-    #"tecnologia": "/tecnologia/",
-    #"electro": "/electro/",
-    #"dormitorio": "/dormitorio/",
-    #"muebles": "/muebles/",
-    #"cortinas": "/decohogar/decoracion/cortinas/",
-    #"decoracion": "/decohogar/decoracion/",
-    #"cocina": "/linea-blanca/cocina/",
+    "tecnologia": "/tecnologia/",
+    "electro": "/electro/",
+    "dormitorio": "/dormitorio/",
+    "muebles": "/muebles/",
+    "cortinas": "/decohogar/decoracion/cortinas/",
+    "decoracion": "/decohogar/decoracion/",
+    "cocina": "/linea-blanca/cocina/",
     #"ropa-cama": "/dormitorio/ropa-cama/",
     #"sabanas": "/dormitorio/ropa-cama/sabanas/",
-    #"tv": "/electro/television/",
-    #"notebooks": "/tecnologia/computadores/notebooks/",
+    "tv": "/electro/television/",
+    "notebooks": "/tecnologia/computadores/notebooks/",
     "tecno": "/tecnologia/",
     #"moda-hombre": "/hombre/moda/",
     #"ropa-interior": "/hombre/ropa-interior/",
     #"zapatos": "/zapatos/hombre/",
     "mountain-bike": "/deportes/bicicletas/mountain-bike/",
-    #"almohadas": "/dormitorio/ropa-cama/almohadas-fundas/",
+    "almohadas": "/dormitorio/ropa-cama/almohadas-fundas/",
 }
 
 def paris():
@@ -36,7 +36,7 @@ def paris():
             totalProducts = re.sub(r'([^0-9])\w+', '', results.text.replace(',', '').strip()) # Total de productos
             totalPages = int(int(totalProducts)/size + 1)
             print(f'Total de productos: {totalProducts}')
-            products = []
+
             for page in range(0, totalPages):
                 print(f'Procesando página {page + 1} de {totalPages}')
                 URL_PARIS = BASE_PARIS + '?start={}&sz={}'.format(start, size)
@@ -73,15 +73,6 @@ def paris():
                             else:
                                 url = f'https://www.paris.cl{url["href"]}'
 
-                        product = {
-                            "nombre": nombre,
-                            "marca": marca,
-                            "precio": precio,
-                            "descuento": descuento,
-                            "url": url
-                        }
-                        products.append(product)
-
                         #### DB ####
 
                         try:
@@ -107,12 +98,6 @@ def paris():
 
                 start+=size
                 time.sleep(1)
-
-    #products = sorted(products, key=lambda p: int(p["descuento"]), reverse=True)
-
-    #with open("paris_productos.json", "w") as f:
-    #    f.write('{"data": ' + json.dumps(products) + "}")
-    #    f.close()
 
 if __name__ == "__main__":
     paris()

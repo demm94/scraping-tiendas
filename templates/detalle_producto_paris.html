@@ -21,11 +21,12 @@
             </div>
         </div>
     </div>
+    <script src="{{ url_for('static', filename='node_modules/bootstrap/dist/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/chart.js/dist/chart.min.js') }}"></script>
     <script>
         (async () => {
             async function fetchData() {
-                const response = await fetch("{{ url_for('apiProductoParis', id=producto.id) }}");
+                const response = await fetch("{{ url_for('paris_bp.apiProductoParis', id=producto.id) }}");
                 const { data } = await response.json();
                 const precios = data.map(({precio}) => precio);
                 const dates = data.map(({date}) => date);

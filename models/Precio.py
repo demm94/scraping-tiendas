@@ -1,5 +1,3 @@
-from email.policy import default
-from xmlrpc.client import DateTime
 import db, datetime
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, ForeignKey, Float, DateTime
@@ -8,7 +6,7 @@ class Precio(db.Base):
     __tablename__ = 'precio'
     id = Column(Integer, primary_key=True)
     articulo_id = Column(Integer, ForeignKey('articulo.id'))
-    articulo = relationship('Articulo')
+    articulo = relationship('Articulo', cascade='all,delete')
     valor = Column(Float, nullable=False)
     create_date = Column(DateTime, default=datetime.datetime.now)
 

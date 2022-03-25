@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='node_modules/bootstrap/dist/css/bootstrap.min.css') }}">
+    <title>{{ producto.tienda }} | {{ producto.nombre }}</title>
+</head>
+<body>
+    {% include "includes/nav.html" %}
+    <div class="container-md">
+        <h1><a target="_blank" href="{{ producto.url }}">{{ producto.nombre }}</a></h1>
+        <ul>
+            {% for precio in precios %}
+                <li>{{ precio.valor }} | {{ precio.create_date }}</li>
+            {% endfor %}
+        </ul>
+        <div class="row">
+            <div class="col-12 col-md-8 mx-auto">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='node_modules/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='node_modules/chart.js/dist/chart.min.js') }}"></script>
+    <script>
+        (async () => {
+            async function fetchData() {
+                const response = await fetch("{{ url_for('hites_bp.apiProductoHites', id=producto.id) }}");
+                const { data } = await response.json();
+                const precios = data.map(({precio}) => precio);
+                const dates = data.map(({date}) => date);
+                return { precios, dates };
+            }
+
+            const { precios, dates } = await fetchData();
+            const labels = dates;
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const data = {
+                labels: labels,
+                datasets: [{
+                    label: 'Evolución de precios',
+                    data: precios,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            };
+    
+            const config = {
+                type: 'line',
+                data: data,
+            }
+    
+            const myCHart = new Chart(ctx, config);
+        })();
+
+    </script>
+</body>
+</html>

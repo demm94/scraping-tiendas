@@ -21,17 +21,18 @@
             </div>
         </div>
     </div>
+    <script src="{{ url_for('static', filename='node_modules/bootstrap/dist/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/chart.js/dist/chart.min.js') }}"></script>
     <script>
         (async () => {
             async function fetchData() {
-                const response = await fetch("{{ url_for('apiProductoFalabella', id=producto.id) }}");
+                const response = await fetch("{{ url_for('falabella_bp.apiProductoFalabella', id=producto.id) }}");
                 const { data } = await response.json();
                 const precios = data.map(({precio}) => precio);
                 const dates = data.map(({date}) => date);
                 return { precios, dates };
             }
-            
+
             const { precios, dates } = await fetchData();
             const labels = dates;
             const ctx = document.getElementById('myChart').getContext('2d');

@@ -24,6 +24,7 @@
             </thead>
         </table>
     </div>
+    <script src="{{ url_for('static', filename='node_modules/bootstrap/dist/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='node_modules/jquery/dist/jquery.min.js') }}"></script>
     <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
     <script>
@@ -33,7 +34,7 @@
             $('#dt').DataTable( {
                 "ajax": {
                     method: "GET",
-                    url: "{{ url_for('apiParis') }}",
+                    url: "{{ url_for('paris_bp.apiParis') }}",
                     dataType: "json",
                 },
                 order: [[ 2, "desc" ]],

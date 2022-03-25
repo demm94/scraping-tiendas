@@ -1,6 +1,7 @@
 import db
 from models.Articulo import Articulo
 from models.Precio import Precio
+from models.Favorito import Favorito
 
 def run():
     pass

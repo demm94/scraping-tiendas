@@ -1,4 +1,4 @@
-import requests, json
+import requests
 import time
 import db
 from models.Articulo import Articulo
@@ -8,27 +8,26 @@ CATEGORIAS_FALABELLA = {
     #"tv": "cat1012",
     #"notebooks": "cat70057",
     #"telefonos": "cat2018",
-    #"computacion": "cat40052",
-    #"computacion-gamer": "cat4850013",
+    "computacion": "cat40052",
+    "computacion-gamer": "cat4850013",
     "tecnologia": "cat7090034",
-    #"decoracion-iluminacion": "cat2026",
-    #"cocina": "cat3065",
-    #"electrohogar": "cat16510006",
-    #"hombre": "cat7450065",
+    "decoracion-iluminacion": "cat2026",
+    "cocina": "cat3065",
+    "electrohogar": "cat16510006",
+    "hombre": "cat7450065",
     "respaldos-veladores": "cat3212",
-    #"sabanas": "cat3215",
-    #"ropa-cama": "cat2073",
-    #"banio": "cat2006",
-    #"sillas": "cat9130008",
-    #"muebles": "cat1008",
-    #"cortinas": "cat5540010",
-    #"cortinas-roller": "CATG10086",
-    #"almohadas": "cat13790009",
+    "sabanas": "cat3215",
+    "ropa-cama": "cat2073",
+    "banio": "cat2006",
+    "sillas": "cat9130008",
+    "muebles": "cat1008",
+    "cortinas": "cat5540010",
+    "cortinas-roller": "CATG10086",
+    "almohadas": "cat13790009",
     "mountain-bike": "cat70008",
 }
 
 def falabella():
-    products = []
     for key, categoria in CATEGORIAS_FALABELLA.items():
         print(f'Procesando categoria {key}')
         API_FALABELLA = 'https://www.falabella.com/s/browse/v1/listing/cl?page={}&categoryId={}&zones=ZL_CERRILLOS,LOSC,130617,RM,RM,13'.format("1", categoria)
@@ -60,16 +59,6 @@ def falabella():
                         else:
                             descuento = 0
 
-                        product = {
-                            "id": id,
-                            "nombre": nombre,
-                            "marca": marca,
-                            "precio": precio,
-                            "url": item['url'],
-                            "descuento": descuento,
-                        }
-                        products.append(product)
-
                         #### DB ####
 
                         try:
@@ -96,12 +85,6 @@ def falabella():
                 time.sleep(4)
                 if page%150 == 0:
                     time.sleep(30)
-
-    #products = sorted(products, key=lambda p: int(p["descuento"]), reverse=True)
-
-    #with open("falabella_productos.json", "w") as f:
-    #        f.write('{"data": ' + json.dumps(products) + "}")
-    #        f.close()
 
 if __name__ == "__main__":
     falabella()
